@@ -1,0 +1,34 @@
+# nginx-wildcard-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-wildcard-demo
+  namespace: default # Example in default namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-wildcard
+  template:
+    metadata:
+      labels:
+        app: nginx-wildcard
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-wildcard-service
+  namespace: default # Example in default namespace
+spec:
+  selector:
+    app: nginx-wildcard
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80 

@@ -1,0 +1,17 @@
+# wildcard-certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-p-i-psilva-org-cert
+  namespace: default # Example in default namespace
+spec:
+  # The name of the secret where the certificate will be stored
+  secretName: wildcard-p-i-psilva-org-tls
+  issuerRef:
+    name: letsencrypt-cloudflare-issuer # Reference the ClusterIssuer created earlier
+    kind: ClusterIssuer
+  # List the domain names to include in the certificate
+  dnsNames:
+  - "*.p.i.psilva.org"
+  # Optionally add the apex domain if you need it covered by the *same* certificate/secret:
+  # - i.psilva.org 

@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jenkins-ingress
+  namespace: jenkins
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-cloudflare-issuer"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - jenkins.i.psilva.org
+    secretName: jenkins-tls
+  rules:
+  - host: jenkins.i.psilva.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080 

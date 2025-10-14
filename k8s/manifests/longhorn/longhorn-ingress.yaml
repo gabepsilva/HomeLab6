@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: longhorn-ingress
+  namespace: longhorn-system
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-cloudflare-issuer"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - longhorn.p.i.psilva.org
+    secretName: longhorn-tls
+  rules:
+  - host: longhorn.p.i.psilva.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: longhorn-frontend
+            port:
+              number: 80 

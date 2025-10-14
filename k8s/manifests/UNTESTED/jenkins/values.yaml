@@ -1,0 +1,260 @@
+# Jenkins Helm Chart Values
+# Production-ready configuration for Jenkins on Kubernetes
+
+# Jenkins Controller Configuration
+controller:
+  # Image configuration - Latest LTS version
+  image:
+    registry: "docker.io"
+    repository: "jenkins/jenkins"
+    tag: "2.504.2-lts"
+    pullPolicy: "Always"
+  
+  # Admin user configuration - using external secret from OnePassword
+  admin:
+    existingSecret: "jenkins-admin-secret"
+    userKey: "username"
+    passwordKey: "password"
+  
+  # Resource limits and requests
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+  
+  # Java options for performance tuning
+  javaOpts: >-
+    -Xmx3g
+    -Xms1g
+    -XX:+UseG1GC
+    -XX:+UseStringDeduplication
+    -Djava.awt.headless=true
+    -Djenkins.install.runSetupWizard=false
+    -Dhudson.model.DirectoryBrowserSupport.CSP="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+  
+  # Jenkins Configuration as Code (JCasC)
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: "This Jenkins instance is managed by Helm and configured with JCasC."
+
+  
+  # Install essential plugins (no version locks - latest compatible versions)
+  installPlugins:
+    # Core Pipeline and Workflow
+    - kubernetes
+    - workflow-aggregator
+    - pipeline-stage-view
+    - pipeline-graph-analysis
+    - pipeline-rest-api
+    - pipeline-milestone-step
+    
+    # Source Control
+    - git
+    #- github
+    #- github-branch-source
+    #- pipeline-github-lib
+    #- ssh-slaves
+    
+    # Configuration and Security
+    - configuration-as-code
+    - matrix-auth
+    - credentials
+    - ssh-credentials
+    
+    # Build Tools and Utilities
+    - docker-workflow
+    - build-timeout
+    - timestamper
+    - ws-cleanup
+    
+    # UI and Visualization
+    #- blueocean
+    #- dashboard-view
+    #- build-pipeline-plugin
+    
+    # Notifications and Reporting
+    #- mailer
+    #- email-ext
+    #- junit
+    
+    # Additional Useful Plugins
+    - workflow-support
+    - pipeline-input-step
+    - pipeline-build-step
+    - copyartifact
+    - parameterized-trigger
+    - ansicolor
+    - locale
+    - dark-theme
+    #- ldap
+    - ssh-slaves
+    - pipeline-graph-view
+    - pipeline-github-lib
+    - htmlpublisher
+    - timestamper
+    - ssh-agent
+    - remote-file
+  
+  # Number of executors on the Jenkins controller
+  numExecutors: 0  # Use agents for builds
+  
+  # Security context
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: "OnRootMismatch"
+  
+  # Service account
+  serviceAccount:
+    create: true
+    name: "jenkins"
+    annotations: {}
+  
+  # Node selector and tolerations
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  # Service configuration
+  serviceType: ClusterIP
+  servicePort: 8080
+  targetPort: 8080
+  # For LoadBalancer service type:
+  # serviceType: LoadBalancer
+  # loadBalancerIP: ""
+  # loadBalancerSourceRanges: []
+  
+  # Additional environment variables
+  containerEnv:
+    - name: JAVA_OPTS
+      value: >-
+        -Duser.timezone=UTC
+        -Dhudson.model.DirectoryBrowserSupport.CSP="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+  
+  # Health checks
+  healthProbes: true
+  probes:
+    startupProbe:
+      httpGet:
+        path: '/login'
+        port: http
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 12
+    livenessProbe:
+      httpGet:
+        path: '/login'
+        port: http
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+    readinessProbe:
+      httpGet:
+        path: '/login'
+        port: http
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+# Persistence configuration - Using Longhorn storage
+persistence:
+  enabled: true
+  existingClaim: ""
+  storageClass: "longhorn"  # Use Longhorn storage class
+  accessMode: "ReadWriteOnce"
+  size: "20Gi"
+  volumes: []
+  mounts: []
+
+# Ingress configuration - Using nginx ingress with cert-manager
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-cloudflare-issuer"
+  hosts:
+    - host: jenkins.i.psilva.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: jenkins-tls
+      hosts:
+        - jenkins.i.psilva.org
+
+# Agent configuration
+agent:
+  enabled: true
+  image:
+    repository: "jenkins/inbound-agent"
+    tag: "4.13.3-1"
+  
+  # Resources for agents
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+  
+  # Pod templates for different types of builds
+  podTemplates:
+    python: |
+      - name: python
+        label: python
+        serviceAccount: jenkins
+        containers:
+        - name: python
+          image: python:3.9
+          command: "/bin/sh -c"
+          args: "cat"
+          ttyEnabled: true
+          privileged: false
+          resourceRequestCpu: "100m"
+          resourceRequestMemory: "256Mi"
+          resourceLimitCpu: "500m"
+          resourceLimitMemory: "1Gi"
+    
+    docker: |
+      - name: docker
+        label: docker
+        serviceAccount: jenkins
+        containers:
+        - name: docker
+          image: docker:20.10.17-dind
+          command: "/bin/sh -c"
+          args: "cat"
+          ttyEnabled: true
+          privileged: true
+          resourceRequestCpu: "100m"
+          resourceRequestMemory: "256Mi"
+          resourceLimitCpu: "1000m"
+          resourceLimitMemory: "2Gi"
+
+# RBAC configuration
+rbac:
+  create: true
+  readSecrets: false
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  # internalAgents:
+  #   allowed: true
+  #   namespaceLabels: {}
+  # externalAgents: {}
+
+# Monitoring and observability
+serviceMonitor:
+  enabled: false
+  # interval: 60s
+  # path: /prometheus

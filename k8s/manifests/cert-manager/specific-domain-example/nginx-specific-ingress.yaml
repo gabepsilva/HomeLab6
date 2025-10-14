@@ -1,0 +1,28 @@
+# nginx-specific-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-specific-ingress
+  namespace: default
+  annotations:
+    # Nginx Ingress Controller annotation
+    kubernetes.io/ingress.class: "nginx"
+    # Cert-manager annotation to use the ClusterIssuer
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-issuer
+spec:
+  tls:
+  - hosts:
+    - "specific.i.psilva.org" # The specific host
+    # Reference the specific secret that cert-manager will create
+    secretName: specific-i-psilva-org-tls
+  rules:
+  - host: "specific.i.psilva.org" # Route traffic for this host
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-specific-service # Service created above
+            port:
+              number: 80 

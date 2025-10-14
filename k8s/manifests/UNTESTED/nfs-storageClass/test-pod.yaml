@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-client-test-pod
+spec:
+  containers:
+    - name: app
+      image: busybox:stable
+      command: ["sh", "-c", "echo NFS works! > /data/hello.txt && sleep 3600"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: nfs-client-test-pvc
+
+

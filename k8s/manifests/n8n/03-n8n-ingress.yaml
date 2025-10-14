@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n-ingress
+  namespace: n8n
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-issuer
+spec:
+  tls:
+  - hosts:
+    - "n8n.p.i.psilva.org"
+    secretName: n8n.p.i.psilva-org-tls
+  rules:
+  - host: "n8n.p.i.psilva.org"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: n8n-service
+            port:
+              number: 5678

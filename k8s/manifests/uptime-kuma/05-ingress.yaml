@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: uptime-kuma
+  namespace: uptime-kuma
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: uptime.p.i.psilva.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: uptime-kuma
+                port:
+                  number: 3001
+  tls:
+    - hosts:
+        - uptime.p.i.psilva.org
+      secretName: uptime-kuma-tls
+
+

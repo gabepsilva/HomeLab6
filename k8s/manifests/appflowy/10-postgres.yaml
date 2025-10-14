@@ -1,0 +1,41 @@
+
+# CloudNativePG Cluster for AppFlowy
+# Deleting the Cluster will cascade to PVCs unless deleted with --cascade=orphan
+# kubectl delete -f 10-postgres.yaml --cascade=orphan
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: appflowy-pg-cluster
+  namespace: appflowy
+spec:
+  instances: 1
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+      storageClassName: longhorn-2-best-effort
+      volumeMode: Filesystem
+  bootstrap:
+    initdb:
+      # must match with the username in the secret.
+      # also must match APPFLOWY_DATABASE_URL, in the secrets
+      database: appflowy 
+      owner: supabase
+      secret:
+        name: appflowy-pg-cluster-secret
+  monitoring:
+    enablePodMonitor: true
+  managed:
+    services:
+      additional:
+      - selectorType: rw
+        serviceTemplate:
+          metadata:
+            name: appflowy-pg-rw-lb
+          spec:
+            type: LoadBalancer
+            loadBalancerIP: 10.10.14.101

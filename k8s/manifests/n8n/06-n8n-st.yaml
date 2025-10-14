@@ -1,0 +1,74 @@
+# n8n-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  serviceName: n8n-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      containers:
+      - name: n8n
+        image: n8nio/n8n:latest
+        ports:
+        - containerPort: 5678
+        env:
+        - name: N8N_HOST
+          value: "n8n.p.i.psilva.org"
+        - name: N8N_PROTOCOL
+          value: "https"
+        - name: WEBHOOK_URL
+          value: "https://n8n.p.i.psilva.org/"
+        - name: TZ
+          value: "UTC"
+        - name: DB_TYPE
+          value: "postgresdb"
+        - name: DB_POSTGRESDB_HOST
+          value: "n8n-pg-cluster-rw"
+        - name: DB_POSTGRESDB_PORT
+          value: "5432"
+        - name: DB_POSTGRESDB_DATABASE
+          value: "n8n"
+        - name: DB_POSTGRESDB_USER
+          valueFrom:
+            secretKeyRef:
+              name: n8n-pg-cluster-secret
+              key: username
+        - name: DB_POSTGRESDB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: n8n-pg-cluster-secret
+              key: password
+        volumeMounts:
+        - name: n8n-data
+          mountPath: /home/node/.n8n-data
+  volumeClaimTemplates:
+  - metadata:
+      name: n8n-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: longhorn-2-best-effort
+      resources:
+        requests:
+          storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: n8n-service
+  namespace: n8n
+spec:
+  selector:
+    app: n8n
+  ports:
+    - port: 5678
+      targetPort: 5678

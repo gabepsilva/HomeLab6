@@ -1,0 +1,25 @@
+# letsencrypt-clusterissuer.yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-cloudflare-issuer
+spec:
+  acme:
+    # Use the Let's Encrypt production server
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: gabriel-homelab@psilva.org
+    privateKeySecretRef:
+      # Secret name used to store the ACME account private key
+      name: letsencrypt-cloudflare-issuer-account-key
+    solvers:
+    - dns01:
+        cloudflare:
+          # Reference the secret containing the Cloudflare API token
+          apiTokenSecretRef:
+            name: cloudflare-api-token-secret
+            key: api-token
+          # Optional: You can add your Cloudflare email here if using Global API Key instead of Token
+          # email: your-cloudflare-email@example.com
+          # apiKeySecretRef:
+          #   name: cloudflare-api-key-secret
+          #   key: api-key

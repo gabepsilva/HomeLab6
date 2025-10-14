@@ -1,0 +1,37 @@
+---
+prometheus:
+  prometheusSpec:
+    retention: 90d  
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+          storageClassName: longhorn-2-best-effort
+    resources:
+      requests:
+        cpu: 4000m
+        memory: 4Gi
+
+grafana:
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClassName: longhorn-2-best-effort
+
+# Node exporter on all nodes
+nodeExporter:
+  enabled: true
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 1Gi
+          storageClassName: longhorn-2-best-effort

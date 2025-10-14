@@ -1,0 +1,35 @@
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: longhorn-strict-local
+provisioner: driver.longhorn.io
+reclaimPolicy: Retain 
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "1"
+  dataLocality: "strict-local"
+  staleReplicaTimeout: "2880" # 48 hours in minutes
+
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: longhorn-2-best-effort
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: driver.longhorn.io
+reclaimPolicy: Retain 
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+parameters:
+  numberOfReplicas: "2"
+  dataLocality: "best-effort"
+  #staleReplicaTimeout: "2880" # 48 hours in minutes
+  staleReplicaTimeout: "30"
+  fsType: "ext4"
+  unmapMarkSnapChainRemoved: "ignored"
+  #disableRevisionCounter: "true"
+  dataEngine: "v1"
+  backupTargetName: "default"
+  fromBackup: ""

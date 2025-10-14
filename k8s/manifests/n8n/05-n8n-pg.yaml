@@ -1,0 +1,44 @@
+
+# CloudNativePG's Cluster resource owns the PVCs (via OwnerReferences), so when you delete the
+# Cluster, Kubernetes cascades the deletion to PVCs. 
+# Always Delete with --cascade=orphan
+# kubectl delete -f 04-n8n-pg.yaml --cascade=orphan
+# ⚠️ Limitation: You must remember to use this flag every time you delete the cluster
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: n8n-pg-cluster
+  namespace: n8n
+spec:
+  instances: 2
+
+  storage:
+    pvcTemplate:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+      storageClassName: longhorn-2-best-effort
+      volumeMode: Filesystem
+
+  bootstrap:
+    initdb:
+      database: n8n
+      owner: n8nuser # must match username in the secret
+      secret:
+        name: n8n-pg-cluster-secret
+  monitoring:
+    enablePodMonitor: true
+  managed:
+    services:
+      additional:
+      - selectorType: rw
+        serviceTemplate:
+          metadata:
+            name: n8n-pg-rw-lb
+          spec:
+            type: LoadBalancer
+            loadBalancerIP: 10.10.14.100

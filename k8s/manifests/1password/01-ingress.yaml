@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: op-connect-operator-allenvs-ingress
+  namespace: op-connect-operator-allenvs
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-cloudflare-issuer"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - opconnect.p.i.psilva.org
+    secretName: onepassword-connect-tls
+  rules:
+  - host: opconnect.p.i.psilva.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: onepassword-connect
+            port:
+              number: 8080

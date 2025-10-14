@@ -1,0 +1,28 @@
+# nginx-wildcard-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-wildcard-ingress
+  namespace: default # Example in default namespace
+  annotations:
+    # Nginx Ingress Controller annotation
+    kubernetes.io/ingress.class: "nginx"
+    # Cert-manager annotation to use the ClusterIssuer
+    cert-manager.io/cluster-issuer: letsencrypt-cloudflare-issuer
+spec:
+  tls:
+  - hosts:
+    - "nginx.p.i.psilva.org" # Example host covered by the wildcard
+    # Reference the secret that cert-manager will create
+    secretName: wildcard-i-psilva-org-tls
+  rules:
+  - host: "nginx.p.i.psilva.org"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-wildcard-service
+            port:
+              number: 80 

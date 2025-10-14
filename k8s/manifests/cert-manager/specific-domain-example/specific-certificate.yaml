@@ -1,0 +1,14 @@
+# specific-certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: specific-i-psilva-org-cert # Different name for this Certificate object
+  namespace: default
+spec:
+  # Different secret name to store this specific certificate
+  secretName: specific-i-psilva-org-tls
+  issuerRef:
+    name: letsencrypt-cloudflare-issuer # Using the same ClusterIssuer
+    kind: ClusterIssuer
+  dnsNames:
+  - "specific.i.psilva.org" # The specific domain name 
