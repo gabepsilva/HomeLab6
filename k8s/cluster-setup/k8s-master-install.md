@@ -133,3 +133,7 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
 
 kubeadm join 10.10.0.164:6443 --token 7fujhe.9ar5ab9qeugefg1s \
 	--discovery-token-ca-cert-hash sha256:5e9d01b9d19215d7408e68d9a5051ac3a5c57e07b476e5aadc5128a4417eb36a
+
+
+
+	kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml

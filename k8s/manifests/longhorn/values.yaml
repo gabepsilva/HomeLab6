@@ -1,2 +1,7 @@
 defaultSettings:
-  defaultDataPath: /opt/longhorn-data
+  #defaultDataPath: /opt/longhorn-data
+  v2DataEngine: "true"
+  # Hugepages configuration for v2 data engine (requires 2Gi hugepages-2Mi per node)
+  # If hugepages are not available, set dataEngineHugepageEnabled to disable hugepages
+  # dataEngineHugepageEnabled: '{"v2":"false"}'  # Uncomment to disable hugepages for v2
+  # dataEngineMemorySize: '{"v2":"2048"}'  # Memory size in MiB (default: 2048 = 2Gi)

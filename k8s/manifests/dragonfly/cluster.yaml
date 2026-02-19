@@ -1,0 +1,22 @@
+---
+# To create a sample Dragonfly instance with a master and 2 replicas, run the this command
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  namespace: pilot-dev1
+  labels:
+    app.kubernetes.io/name: dragonfly
+    app.kubernetes.io/instance: dragonfly-sample
+    app.kubernetes.io/part-of: dragonfly-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: dragonfly-operator
+  name: dragonfly-sample
+spec:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 500m
+      memory: 500Mi
+    limits:
+      cpu: 600m
+      memory: 750Mi

@@ -75,6 +75,33 @@ sudo chown ubuntu:ubuntu /pv
 
 ```
 
+### 3.2 Configure Hugepages for Longhorn v2 Data Engine
+
+Longhorn v2 data engine requires 2Gi of hugepages-2Mi per node for optimal performance.
+
+**Option A: Using sysctl.conf (Recommended - Simple)**
+
+```bash
+# Allocate 1024 hugepages (2Gi total) - applies immediately
+sudo echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
+
+# Make it persistent across reboots
+sudo echo "vm.nr_hugepages=1024" >> /etc/sysctl.conf
+
+# Apply sysctl settings
+sudo sysctl -p
+
+# Verify hugepages are allocated
+grep Huge /proc/meminfo
+```
+
+You should see output like:
+```
+HugePages_Total:    1024
+HugePages_Free:     1024
+HugePages_Rsvd:        0
+HugePages_Surp:        0
+```
 
 
 ### 4. Install Kubernetes Components
@@ -127,3 +154,32 @@ After joining the worker node to the cluster, verify from the master node:
 kubectl get nodes
 ```
 
+
+Incorporate later
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+ # Current State:
+ # - ✅ Cert-manager installed and working (Let's Encrypt with Cloudflare DNS01)
+ # - ✅ APIService already configured with insecureSkipTLSVerify: true for API server → metrics-server #communication
+ # - ❌ No internal CA or self-signed issuer for cluster-internal certificates
+ # - ❌ No TLS certificates managed in kube-system namespace
+
+
+ ```bash
+ kubectl patch deployment metrics-server -n kube-system --type='json' -p='[
+    {
+      "op": "add",
+      "path": "/spec/template/spec/containers/0/args/-",
+      "value": "--kubelet-insecure-tls"
+    }
+  ]'
+ ```
+
+   Verification (run after ~30 seconds):
+  # Check pod is ready
+  kubectl get pods -n kube-system -l k8s-app=metrics-server
+
+  # Test metrics collection
+  kubectl top nodes
+  kubectl top pods -n kube-system
